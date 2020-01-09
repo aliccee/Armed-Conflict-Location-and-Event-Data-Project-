@@ -1,0 +1,29 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+library(readr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(data.table)
+```
+
+
+```{r}
+X2001_2010 <- read_csv("~/Desktop/projects/eda-class-materials/2001-2010.csv")
+View(X2001_2010)
+```
+
+```{r}
+dim(X2001_2010)
+ncol(X2001_2010)
+nrow(X2001_2010)
+head(X2001_2010)
+
+```
+

@@ -1,0 +1,133 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+
+# Where is this data from?
+It is from the ACLED database. It is a wellknown project and it is hugh. 
+There are some data scientists, social schientists and professors studying on project.
+
+
+# Loading packages. 
+
+```{r}
+library(tidyverse)
+library(dplyr)  #Used for data manipulation of the data set
+library(ggplot2) #Used for plotting
+library(readr) #Used for reading files
+library(lubridate)  #Used for time series
+library(RColorBrewer)    #Used for color paletting in R
+```
+
+
+# Let's check this data and do some cleaning.
+
+```{r}
+df <- read_csv("~/Downloads/2006-2012.csv")
+
+names(df)
+class(df)
+str(df)
+```
+
+#I want to remove some columns which only for data entry
+
+```{r}
+df1 <- df[-c(2, 3, 4, 5, 8,12,14, 26)]
+names(df1)
+
+#Looking at columns such as actor1, admin1, notes and so on, we see that they have some missing data.
+apply(df1, 2, function(x) any(is.na(x)))
+df1$actor2[is.na(df1$actor2)] <- "NONE"
+head(df1$actor2)
+
+
+#The event date column is in DD/MM/YYYY format.We assign this to the data set using dmy() function.
+df1$event_date <- dmy(df1$event_date)
+#for further analysis and aggregating data on monthly basis wew mutate the dataset to add a column for month.
+df1<-df1 %>%
+  mutate(MONTH=month(df1$event_date))
+
+head(df1)
+
+
+```
+
+
+```{r}
+df1%>%
+  group_by(country)%>%
+  summarise(sum(fatalities))%>%
+  arrange(desc(`sum(fatalities)`))%>%
+  head(10)
+```
+#We see that Sudan has the largest number of fatalities in all other the countries from year 2006 t0 2012.
+```{r}
+summary(df1)
+
+##creating data set for ggplot()
+plot <- df1 %>%
+  group_by(year)%>%
+  summarise(count=n())%>%
+  arrange(desc(count))
+
+#using ggplot for visualization
+plot %>%
+  ggplot(aes(x = year,y=count,fill=count)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(name = "Year") +
+  scale_y_continuous(name = "Total Number of Conflicts",labels = scales::comma) +
+  ggtitle("Frequency for Number of Conflicts which happened from 2006 to 2012")
+```
+#From this graph, we can see these is a decrese in 2009 and it jumped dramatically since 2010. And the total number of conflicts keeped increasing. We want to look further on the data of 2012 since it is the closest year from now. 
+
+
+```{r}
+#creating data set for ggplot()
+plot1 <- df1 %>%
+  dplyr::filter(year == 2012)%>%
+  group_by(country)%>%
+  summarise(count=n())%>%
+  arrange(desc(count))%>%
+  head(10)
+
+
+  #using ggplot for visualization
+plot1 %>%
+  arrange(desc(count))%>%
+  ggplot(aes(x = reorder(country,count), y=count,fill=count)) +
+  geom_bar(stat = "identity") + 
+  scale_x_discrete(name = "Country") +
+  scale_y_continuous(name = "Total Number of Conflicts",labels = scales::comma) +
+  ggtitle("Frequency for Number of Conflicts  in 2012",
+  subtitle = "Top 10 countries with highest number of conflicts in 2012")+
+  coord_flip()
+```
+## As shown, Pakistan is outstandingly observed as the one who has the largest number of conflicts. 
+## I am interested in investigating the trend of fatalities
+```{r}
+df1 %>%
+  group_by(year)%>%
+  summarise(total=sum(fatalities))%>%
+  ggplot(aes(x=year,y=total,fill=total))+
+  geom_bar(stat = "identity")+
+  scale_x_continuous(name = "Year") +
+  scale_y_continuous(name = "Total Number of Fatalities",labels = scales::comma) +
+  ggtitle("Fatalities over the years due to conflicts",
+  subtitle = "Data about fatalities happening every year due to conflicts")
+```
+
+
+
+
+
+## This is really a huge data set. And a lot of things can be tested and evaluated from it. I basically used ggplot tool to draw several graphs with the stats I am most interested in. With the given data, I found: 1)Sudan has the largest number of fatalities in all other the countries from year 2006 t0 2012. 2) These is a decrese in 2009 and it jumped dramatically since 2010. And the total number of conflicts keeped increasing.  3)And I dived into the data of 2012, I sadly found that Pakistan is outstandingly observed as the one who has the largest number of conflicts. 
+
+
+
+
+
